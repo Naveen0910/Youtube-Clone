@@ -13,7 +13,12 @@ import VideoItemDetails from './components/VideoItemDetails'
 class App extends Component {
   state = {savedVideos: [], isDarkTheme: false}
 
-  addToSavedVideos = () => {}
+  addToSavedVideos = data => {
+    const {savedVideos} = this.state
+    const productObject = savedVideos.find(
+      eachVideo => eachVideo.id === data.id,
+    )
+  }
 
   removeFromSavedVideos = () => {}
 
