@@ -1,109 +1,135 @@
-import {useState} from 'react'
+import {Component} from 'react'
 import Cookies from 'js-cookie'
-import './index.css'
 
-function LoginPage(props) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [loginStatus, setLoginStatus] = useState(true)
-  const [showPassword, setShowPassword] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
+import {Redirect} from 'react-router-dom'
 
-  function onChangeUsername(event) {
-    setUsername(event.target.value)
+import {
+  LoginContainer,
+  ShadowContainer,
+  LoginDivContainer,
+  ImageEl,
+  LoginFormContainer,
+  InputEl,
+  LabelEl,
+  ButtonEl,
+  ErrorMsg,
+} from './styledComponents'
+
+class LoginPage extends Component {
+  state = {
+    visibility: false,
+    username: '',
+    password: '',
+    showSubmitError: false,
+    errorMsg: '',
   }
 
-  function onChangePassword(event) {
-    setPassword(event.target.value)
+  showPassword = event => {
+    if (event.target.checked) {
+      this.setState({visibility: true})
+    } else {
+      this.setState({visibility: false})
+    }
   }
 
-  function onLoginSuccessful(jwtToken) {
-    const {history} = props
-    Cookies.set('jwt_token', jwtToken, {expires: 30})
+  onChangeUsername = e => {
+    this.setState({username: e.target.value})
+  }
+
+  onChangePassword = e => {
+    this.setState({password: e.target.value})
+  }
+
+  onSubmitSuccess = jwtToken => {
+    const {history} = this.props
+    Cookies.set('jwt_token', jwtToken, {
+      expires: 30,
+      path: '/',
+    })
+
     history.replace('/')
   }
 
-  function onLoginFailure(error) {
-    setLoginStatus(false)
-    setErrorMsg(error)
+  onSubmitFailure = errorMsg => {
+    this.setState({showSubmitError: true, errorMsg})
   }
 
-  async function fetchingUserdata(options, url) {
+  formSubmit = async event => {
+    event.preventDefault()
+    const {username, password} = this.state
+    const url = 'https://apis.ccbp.in/login'
+    const options = {
+      method: 'POST',
+      body: JSON.stringify({username, password}),
+    }
     const response = await fetch(url, options)
     const data = await response.json()
     if (response.ok === true) {
-      onLoginSuccessful(data.jwt_token)
+      this.onSubmitSuccess(data.jwt_token)
     } else {
-      onLoginFailure(data.error_msg)
+      this.onSubmitFailure(data.error_msg)
     }
   }
 
-  function onClickSubmit(event) {
-    event.preventDefault()
-    const userDetails = {username, password}
-    const Url = 'https://apis.ccbp.in/login'
-    const options = {
-      method: 'POST',
-      body: JSON.stringify(userDetails),
+  render() {
+    const {
+      visibility,
+      username,
+      password,
+      showSubmitError,
+      errorMsg,
+    } = this.state
+
+    const jwtToken = Cookies.get('jwt_token')
+    if (jwtToken !== undefined) {
+      return <Redirect to="/" />
     }
-    fetchingUserdata(options, Url)
-  }
 
-  function onClickShowPassword() {
-    setShowPassword(prevState => !prevState)
+    return (
+      <LoginContainer>
+        <ShadowContainer>
+          <ImageEl
+            src="https://assets.ccbp.in/frontend/react-js/nxt-watch-logo-light-theme-img.png"
+            alt="website logo"
+          />
+          <LoginFormContainer onSubmit={this.formSubmit}>
+            <LoginDivContainer>
+              <LabelEl>USERNAME</LabelEl>
+              <InputEl
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={this.onChangeUsername}
+              />
+            </LoginDivContainer>
+            <LoginDivContainer>
+              <LabelEl>PASSWORD</LabelEl>
+              <InputEl
+                type={visibility ? 'text' : 'password'}
+                placeholder="Password"
+                value={password}
+                onChange={this.onChangePassword}
+              />
+            </LoginDivContainer>
+            <LoginDivContainer direction="row">
+              <InputEl
+                type="checkbox"
+                id="checkbox"
+                onChange={this.showPassword}
+              />
+              <LabelEl htmlFor="checkbox" cursor="pointer">
+                Show Password
+              </LabelEl>
+            </LoginDivContainer>
+            <ButtonEl>Login</ButtonEl>
+            {showSubmitError && (
+              <ErrorMsg className="error-message">*{errorMsg}</ErrorMsg>
+            )}
+          </LoginFormContainer>
+        </ShadowContainer>
+      </LoginContainer>
+    )
   }
-
-  return (
-    <div className="login-main-container">
-      <div className="login-sub-container">
-        <img
-          className="logo"
-          alt="website logo"
-          src="https://assets.ccbp.in/frontend/react-js/nxt-watch-logo-light-theme-img.png"
-        />
-        <form onSubmit={onClickSubmit}>
-          <div className="input-fields">
-            <label className="login-label" htmlFor="username">
-              Username
-            </label>
-            <input
-              className="login-input"
-              value={username}
-              type="text"
-              id="username"
-              onChange={onChangeUsername}
-            />
-          </div>
-          <div className="input-fields">
-            <label className="login-label" htmlFor="password">
-              Password
-            </label>
-            <input
-              className="login-input"
-              value={password}
-              type={showPassword ? 'text' : 'password'}
-              id="password"
-              onChange={onChangePassword}
-            />
-          </div>
-          <div className="show-password-container">
-            <input
-              onChange={onClickShowPassword}
-              type="checkbox"
-              id="checkbox"
-            />
-            <label htmlFor="checkbox">Show password</label>
-          </div>
-          <div className="button-container">
-            <button className="submit-button" type="submit">
-              Login
-            </button>
-            {!loginStatus && <p className="error-msg">{errorMsg}</p>}
-          </div>
-        </form>
-      </div>
-    </div>
-  )
 }
 
 export default LoginPage
