@@ -4,6 +4,7 @@ import ReactPlayer from 'react-player'
 import {formatDistanceToNow} from 'date-fns'
 import {AiOutlineLike, AiOutlineDislike, AiFillSave} from 'react-icons/ai'
 
+import SavedVideosContext from '../../context/SavedVideosContext'
 import NavBar from '../NavBar'
 import SideBar from '../SideBar'
 import './index.css'
@@ -67,82 +68,96 @@ class VideoItemDetails extends Component {
     this.setState({isliked: false})
   }
 
-  onClickSaved = () => {
-    this.setState(prevState => ({isSaved: !prevState.isSaved}))
-  }
-
   render() {
     const {videoData, isSaved, isLiked, isDisliked} = this.state
 
     return (
-      <>
-        <NavBar />
-        <div className="video-item-main-container">
-          <SideBar />
-          <div className="video-item-sub-container">
-            {this.renderingVideoDetails()}
-            <div className="video-info-container">
-              <p>{videoData.title}</p>
-              <div className="like-dislike-container">
-                <div className="video-item-view-count">
-                  <p>{videoData.videoCount} views</p>
+      <SavedVideosContext.Consumer>
+        {value => {
+          const {addToSavedVideos} = value
+
+          const onClickSaved = () => {
+            this.setState(prevState => ({isSaved: !prevState.isSaved}))
+            addToSavedVideos(videoData)
+          }
+
+          return (
+            <>
+              <NavBar />
+              <div className="video-item-main-container">
+                <SideBar />
+                <div className="video-item-sub-container">
+                  {this.renderingVideoDetails()}
+                  <div className="video-info-container">
+                    <p>{videoData.title}</p>
+                    <div className="like-dislike-container">
+                      <div className="video-item-view-count">
+                        <p>{videoData.videoCount} views</p>
+                      </div>
+                      <div className="like-dislike-save">
+                        <button
+                          onClick={this.onClickLike}
+                          type="button"
+                          className="like-button"
+                        >
+                          <AiOutlineLike
+                            className={isLiked ? 'active' : 'non-active'}
+                          />
+                          <p className={isLiked ? 'active' : 'non-active'}>
+                            Like
+                          </p>
+                        </button>
+                        <button
+                          onClick={this.onClickDislike}
+                          type="button"
+                          className="like-button"
+                        >
+                          <AiOutlineDislike
+                            className={isDisliked ? 'active' : 'non-active'}
+                          />
+                          <p className={isDisliked ? 'active' : 'non-active'}>
+                            Dislike
+                          </p>
+                        </button>
+                        <button
+                          onClick={onClickSaved}
+                          type="button"
+                          className="like-button"
+                        >
+                          <AiFillSave
+                            className={isSaved ? 'active' : 'non-active'}
+                          />
+                          <p className={isSaved ? 'active' : 'non-active'}>
+                            {isSaved ? 'Saved' : 'Save'}
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="video-channel-container">
+                    <div>
+                      <img
+                        alt="profileimg"
+                        className="video-profile-image"
+                        src={videoData.profileImageUrl}
+                      />
+                    </div>
+                    <div>
+                      <p className="video-channel-name">{videoData.name}</p>
+                      <p className="video-channel-subcribers">
+                        {videoData.subscribersCount}
+                      </p>
+                      <p className="video-channel-description">
+                        {videoData.description}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="like-dislike-save">
-                  <button
-                    onClick={this.onClickLike}
-                    type="button"
-                    className="like-button"
-                  >
-                    <AiOutlineLike
-                      className={isLiked ? 'active' : 'non-active'}
-                    />
-                    <p className={isLiked ? 'active' : 'non-active'}>Like</p>
-                  </button>
-                  <button
-                    onClick={this.onClickDislike}
-                    type="button"
-                    className="like-button"
-                  >
-                    <AiOutlineDislike
-                      className={isDisliked ? 'active' : 'non-active'}
-                    />
-                    <p className={isDisliked ? 'active' : 'non-active'}>
-                      Dislike
-                    </p>
-                  </button>
-                  <button
-                    onClick={this.onClickSaved}
-                    type="button"
-                    className="like-button"
-                  >
-                    <AiFillSave className={isSaved ? 'active' : 'non-active'} />{' '}
-                    <p className={isSaved ? 'active' : 'non-active'}>
-                      {isSaved ? 'Saved' : 'Save'}
-                    </p>
-                  </button>
-                </div>
               </div>
-            </div>
-            <div className="video-channel-container">
-              <div>
-                <img
-                  className="video-profile-image"
-                  src={videoData.profileImageUrl}
-                />
-              </div>
-              <div>
-                <p className="video-channel-name">{videoData.name}</p>
-                <p className="video-channel-subcribers">
-                  {videoData.subscribersCount}
-                </p>
-                <p className="video-channel-description">
-                  {videoData.description}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
+            </>
+          )
+        }}
+      </SavedVideosContext.Consumer>
     )
   }
 }
